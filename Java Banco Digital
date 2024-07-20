@@ -1,0 +1,151 @@
+import java.util.HashMap;
+import java.util.Map;
+
+// Classe Cliente
+class Cliente {
+    private String nome;
+    private String cpf;
+
+    public Cliente(String nome, String cpf) {
+        this.nome = nome;
+        this.cpf = cpf;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public String getCpf() {
+        return cpf;
+    }
+}
+
+// Classe abstrata Conta
+abstract class Conta {
+    private Cliente cliente;
+    private double saldo;
+
+    public Conta(Cliente cliente) {
+        this.cliente = cliente;
+        this.saldo = 0;
+    }
+
+    public Cliente getCliente() {
+        return cliente;
+    }
+
+    public double getSaldo() {
+        return saldo;
+    }
+
+    public abstract void sacar(double valor);
+    public abstract void depositar(double valor);
+    public abstract void transferir(double valor, Conta destino);
+}
+
+// Classe ContaCorrente
+class ContaCorrente extends Conta {
+    private static final double LIMITE = 1000;
+
+    public ContaCorrente(Cliente cliente) {
+        super(cliente);
+    }
+
+    @Override
+    public void sacar(double valor) {
+        if (valor <= getSaldo() + LIMITE) {
+            super.saldo -= valor;
+            System.out.println("Saque realizado: " + valor);
+        } else {
+            System.out.println("Saldo insuficiente");
+        }
+    }
+
+    @Override
+    public void depositar(double valor) {
+        super.saldo += valor;
+        System.out.println("Depósito realizado: " + valor);
+    }
+
+    @Override
+    public void transferir(double valor, Conta destino) {
+        sacar(valor);
+        destino.depositar(valor);
+    }
+}
+
+// Classe ContaPoupanca
+class ContaPoupanca extends Conta {
+    private static final double JUROS = 0.02;
+
+    public ContaPoupanca(Cliente cliente) {
+        super(cliente);
+    }
+
+    @Override
+    public void sacar(double valor) {
+        if (valor <= getSaldo()) {
+            super.saldo -= valor;
+            System.out.println("Saque realizado: " + valor);
+        } else {
+            System.out.println("Saldo insuficiente");
+        }
+    }
+
+    @Override
+    public void depositar(double valor) {
+        super.saldo += valor;
+        System.out.println("Depósito realizado: " + valor);
+    }
+
+    @Override
+    public void transferir(double valor, Conta destino) {
+        sacar(valor);
+        destino.depositar(valor);
+    }
+
+    public void aplicarJuros() {
+        super.saldo += getSaldo() * JUROS;
+        System.out.println("Juros aplicados.");
+    }
+}
+
+// Classe Banco
+class Banco {
+    private Map<String, Conta> contas;
+
+    public Banco() {
+        this.contas = new HashMap<>();
+    }
+
+    public void adicionarConta(Conta conta) {
+        contas.put(conta.getCliente().getCpf(), conta);
+    }
+
+    public Conta getConta(String cpf) {
+        return contas.get(cpf);
+    }
+}
+
+// Classe Main para execução
+public class Main {
+    public static void main(String[] args) {
+        Cliente cliente1 = new Cliente("João Silva", "12345678900");
+        ContaCorrente conta1 = new ContaCorrente(cliente1);
+        ContaPoupanca conta2 = new ContaPoupanca(cliente1);
+
+        Banco banco = new Banco();
+        banco.adicionarConta(conta1);
+        banco.adicionarConta(conta2);
+
+        // Operações
+        Conta minhaConta = banco.getConta("12345678900");
+        minhaConta.depositar(1000);
+        minhaConta.sacar(200);
+        minhaConta.transferir(300, conta2);
+
+        // Operações na Conta Poupança
+        ContaPoupanca contaPoupanca = (ContaPoupanca) banco.getConta("12345678900");
+        contaPoupanca.aplicarJuros();
+    }
+}
